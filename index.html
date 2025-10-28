@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gadget Purr Shop</title>
+<style>
+  :root {
+    --accent: #0f766e;
+    --accent-light: #14b8a6;
+    --accent-dark: #0d5955;
+    --text: #1e293b;
+    --muted: #64748b;
+    --bg: #ffffff;
+    --bg-alt: #f8fafc;
+    --border: #e2e8f0;
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -2px rgba(0,0,0,0.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  /* Cart UI styles */
+  .cart-button{
+    background: var(--bg);
+    border: 2px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-left: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .cart-button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .cart-count{
+    background: var(--accent);
+    color: #fff;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .cart-sidebar{
+    position: fixed;
+    right: 24px;
+    top: 90px;
+    width: 380px;
+    max-height: calc(100vh - 120px);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: auto;
+    padding: 20px;
+    z-index: 60;
+  }
+  .cart-sidebar h3{
+    margin: 0 0 16px 0;
+    font-size: 20px;
+  }
+  .cart-item{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .cart-item .meta{
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .cart-footer{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    margin-top: 8px;
+    border-top: 2px solid var(--border);
+  }
+  .cart-empty{
+    color: var(--muted);
+    padding: 32px 16px;
+    text-align: center;
+    font-size: 15px;
+  }
+  /* Update prices modal */
+  .modal-backdrop{
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 80;
+    backdrop-filter: blur(4px);
+  }
+  .modal{
+    background: var(--bg);
+    padding: 24px;
+    border-radius: 16px;
+    max-width: 720px;
+    width: 90%;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  }
+  .modal h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .modal textarea{
+    width: 100%;
+    height: 180px;
+    border: 2px solid var(--border);
+    padding: 12px;
+    border-radius: 12px;
+    font-family: ui-monospace, monospace;
+    font-size: 14px;
+    margin: 16px 0;
+    transition: border-color 0.15s;
+  }
+  .modal textarea:focus{
+    outline: none;
+    border-color: var(--accent);
+  }
+  .modal .actions{
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+  header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 6%;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .logo{
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  nav{
+    display: flex;
+    gap: 4px;
+  }
+  nav a{
+    padding: 8px 16px;
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  nav a:hover{
+    background: var(--bg-alt);
+    color: var(--accent);
+  }
+  .hero{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 100px 20px;
+    background: linear-gradient(to bottom, var(--bg-alt), var(--bg));
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: radial-gradient(circle, var(--accent-light) 0%, transparent 70%);
+    opacity: 0.05;
+    animation: rotate 60s linear infinite;
+  }
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .hero h1{
+    font-size: 48px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    background: linear-gradient(to right, var(--text), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+  }
+  .hero p{
+    color: var(--muted);
+    font-size: 20px;
+    margin-bottom: 32px;
+    max-width: 600px;
+  }
+  .btn{
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn:hover{
+    background: var(--accent-dark);
+    transform: translateY(-1px);
+  }
+  .btn::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: -100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: 0.5s;
+  }
+  .btn:hover::after {
+    left: 100%;
+  }
+  section{
+    padding: 80px 6%;
+  }
+  h2{
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 32px;
+    color: var(--text);
+  }
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 32px;
+    margin: 0 auto;
+    max-width: 1400px;
+  }
+  .card{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .card:hover{
+    transform: translateY(-6px);
+    box-shadow: var(--shadow);
+    border-color: var(--accent-light);
+  }
+  .card img{
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-alt);
+  }
+  .card-body{
+    padding: 20px;
+  }
+  .cat{
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .name{
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 12px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .price{
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .add-to-cart{
+    width: 100%;
+    background: var(--bg);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+  }
+  .add-to-cart:hover{
+    background: var(--accent);
+    color: white;
+  }
+  footer{
+    margin-top: 80px;
+    padding: 40px 6%;
+    text-align: center;
+    font-size: 15px;
+    color: var(--muted);
+    background: var(--bg-alt);
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">📱 Gadget Purr Shop</div>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+    </nav>
+    <div style="display:flex;align-items:center">
+      <button id="updatePricesBtn" class="cart-button" title="Update prices">Update Prices</button>
+      <button id="cartButton" class="cart-button" title="Open cart">Cart <span id="cartCount" class="cart-count">0</span></button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Latest Tech & Gadgets</h1>
+    <p>Discover premium electronics at unbeatable prices</p>
+    <button class="btn" onclick="alert('Offline demo — no shop backend')">Shop Now</button>
+  </section>
+
+  <section>
+  <h2>Featured Products</h2>
+  <div id="productCount" style="text-align:center;color:var(--muted);margin-bottom:18px">Showing 0 products</div>
+    <div class="grid">
+    <div class="card">
+  <img src="https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=800&q=80" alt="Premium Wireless Headphones" loading="lazy" />
+        <div class="card-body">
+          <div class="cat">Audio</div>
+          <div class="name">Premium Wireless Headphones</div>
+    <div class="price">KSh 19999</div>
+        </div>
+      </div>
+    <div class="card">
+    <img src="https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80" alt="Apple Watch Pro" loading="lazy" />
+        <div class="card-body">
+          <div class="cat">Wearables</div>
+          <div class="name">Apple Watch Pro</div>
+          <div class="price">KSh 25000</div>
+        </div>
+      </div>
+    <div class="card">
+    <img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=800&q=80" alt="MacBook Pro" loading="lazy" />
+        <div class="card-body">
+          <div class="cat">Computers</div>
+          <div class="name">Mackbook15″ Ultra Slim</div>
+          <div class="price">KSh150000 </div>
+        </div>
+      </div>
+    <div class="card">
+  <img src="https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=800&q=80" alt="Wireless Gaming Mouse" loading="lazy" />
+        <div class="card-body">
+          <div class="cat">Accessories</div>
+          <div class="name">Wireless Gaming Mouse</div>
+          <div class="price">KSh 80000</div>
+        </div>
+      </div>
+
+      <!-- Added products: iPhones, laptops, earphones -->
+    <div class="card">
+  <img src="https://images.unsplash.com/photo-1696179316779-46e7415cc25f?auto=format&fit=crop&w=800&q=80" alt="iPhone 15 Pro" loading="lazy" />
+        <div class="card-body">
+          <div class="cat">Phones</div>
+          <div class="name">iPhone 15 Pro</div>
+          <div class="price">KSh 9999</div>
+        </div>
+      </div>
+    <div class="card">
+  <img src="https://images.unsplash.com/photo-1610438235354-a6ae5528385c?auto=format&fit=crop&w=800&q=80" alt="AirPods Pro" loading="lazy" />
+        <div class="card-body">
+          <div class="cat">Earphones</div>
+          <div class="name">AirPods Pro (2nd Gen)</div>
+          <div class="price">KSh 10000</div>
+        </div>
+      </div>
+    <div class="card">
+  <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80" alt="MacBook Pro 14" loading="lazy" />
+        <div class="card-body">
+          <div class="cat">Computers</div>
+          <div class="name">MacBook Pro 14</div>
+          <div class="price">KSh 111,999</div>
+        </div>
+      </div>
+    <div class="card">
+  <img src="https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?auto=format&fit=crop&w=800&q=80" alt="Studio Buds X" loading="lazy" />
+        <div class="card-body">
+          <div class="cat">Earphones</div>
+          <div class="name">Studio Buds X</div>
+          <div class="price">KSh 14999</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Cart sidebar (hidden by default) -->
+  <aside id="cartSidebar" class="cart-sidebar" style="display:none" aria-hidden="true">
+    <h3>Your Cart</h3>
+    <div id="cartItems"></div>
+    <div id="cartEmpty" class="cart-empty">Your cart is empty.</div>
+    <div class="cart-footer">
+  <div style="font-weight:700">Total: <span id="cartTotal">KSh 0.00</span></div>
+      <div style="display:flex;gap:8px">
+        <button id="checkoutBtn" class="btn">Checkout</button>
+        <button id="closeCartBtn" class="btn">Close</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Update Prices modal -->
+  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-hidden="true">
+    <div class="modal" role="document">
+      <h3>Update product prices (paste JSON)</h3>
+      <p style="color:var(--muted);font-size:13px">Provide a JSON object mapping product names to numeric KSh prices. Example: {"iPhone 15 Pro":99900, "MacBook Pro 14":199900}</p>
+      <textarea id="pricesJson" placeholder='{"iPhone 15 Pro":100000, "MacBook Pro 14":130000}'></textarea>
+      <div class="actions">
+        <button id="applyPrices" class="btn">Apply</button>
+        <button id="cancelPrices" class="btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    © <span id="year"></span> Gadget Purr Shop • All rights reserved
+  </footer>
+
+<script>
+  document.getElementById("year").textContent=new Date().getFullYear();
+  // Update product count based on number of cards in the grid
+  (function(){
+    try{
+      const grid = document.querySelector('.grid');
+      const countEl = document.getElementById('productCount');
+      if(grid && countEl){
+        const cardCount = grid.querySelectorAll('.card').length;
+        countEl.textContent = `Showing ${cardCount} product${cardCount===1? '':'s'}`;
+      }
+    }catch(e){
+      // fail silently for older browsers/environments
+      console.error(e);
+    }
+  })();
+
+  // Simple cart implementation (localStorage-backed)
+  (function(){
+    const STORAGE_KEY = 'gp_cart_v1';
+    function readCart(){
+      try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }catch(e){return []}
+    }
+    function writeCart(cart){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)); }catch(e){}
+    }
+
+    function formatPrice(n){
+      // Format as Kenyan Shilling (KSh) with thousand separators.
+      const isInt = Math.round(n) === n;
+      const numStr = isInt ? n.toString() : n.toFixed(2);
+      // add comma thousands separator
+      const parts = numStr.split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return 'KSh ' + parts.join('.');
+    }
+
+    function updateCartUI(){
+      const cart = readCart();
+      const countEl = document.getElementById('cartCount');
+      const itemsEl = document.getElementById('cartItems');
+      const emptyEl = document.getElementById('cartEmpty');
+      const totalEl = document.getElementById('cartTotal');
+      const count = cart.reduce((s,i)=>s+i.qty,0);
+      if(countEl) countEl.textContent = count;
+      itemsEl.innerHTML = '';
+      if(cart.length===0){ emptyEl.style.display='block'; } else { emptyEl.style.display='none'; }
+      let total = 0;
+      cart.forEach((it, idx)=>{
+        total += it.price * it.qty;
+        const div = document.createElement('div'); div.className='cart-item';
+        div.innerHTML = `<div><div class="meta">${it.name}</div><div style="font-weight:700">${formatPrice(it.price)} × ${it.qty}</div></div><div><button data-idx='${idx}' class='btn remove-item' style='background:transparent;border:1px solid #eee'>Remove</button></div>`;
+        itemsEl.appendChild(div);
+      });
+      if(totalEl) totalEl.textContent = formatPrice(total);
+      // wire remove buttons
+      itemsEl.querySelectorAll('.remove-item').forEach(btn=>btn.addEventListener('click', (e)=>{
+        const i = Number(btn.getAttribute('data-idx'));
+        const c = readCart(); c.splice(i,1); writeCart(c); updateCartUI();
+      }));
+    }
+
+    function addToCart(name, price){
+      const c = readCart();
+      const existing = c.find(i=>i.name===name && i.price===price);
+      if(existing){ existing.qty += 1; }
+      else { c.push({name, price, qty:1}); }
+      writeCart(c); updateCartUI();
+    }
+
+    // attach add buttons to product cards
+    document.querySelectorAll('.card').forEach(card=>{
+      const body = card.querySelector('.card-body');
+      if(!body) return;
+      // avoid adding multiple times
+      if(body.querySelector('.add-to-cart')) return;
+      const btn = document.createElement('button'); btn.className='btn add-to-cart'; btn.textContent='Add to cart';
+      btn.style.marginTop='8px'; btn.style.width='100%';
+      btn.addEventListener('click', ()=>{
+        const name = card.querySelector('.name')?.textContent?.trim() || 'Product';
+  const priceText = card.querySelector('.price')?.textContent || 'KSh 0';
+        const price = parseFloat(priceText.replace(/[^0-9.-]+/g, '')) || 0;
+        addToCart(name, price);
+      });
+      body.appendChild(btn);
+    });
+
+    // cart toggle and checkout
+    const cartBtn = document.getElementById('cartButton');
+    const cartSidebar = document.getElementById('cartSidebar');
+    const closeCartBtn = document.getElementById('closeCartBtn');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    function showCart(show){
+      if(!cartSidebar) return;
+      cartSidebar.style.display = show ? 'block' : 'none';
+      cartSidebar.setAttribute('aria-hidden', show ? 'false' : 'true');
+      updateCartUI();
+    }
+    if(cartBtn) cartBtn.addEventListener('click', ()=> showCart(true));
+    if(closeCartBtn) closeCartBtn.addEventListener('click', ()=> showCart(false));
+    if(checkoutBtn) checkoutBtn.addEventListener('click', ()=> alert('Checkout demo — offline mode'));
+
+    // initial render
+    updateCartUI();
+  })();
+</script>
+</body>
+</html>
